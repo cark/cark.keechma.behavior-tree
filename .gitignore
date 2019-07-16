@@ -25,3 +25,4 @@ launch.ps1
 .cljs_node_repl/
 out/
 resources/**/js/
+gh-pages/
