@@ -1,0 +1,9 @@
+-/.cpcache
+-/.git
+-/.shadow-cljs
+-/node_modules
+-js
+-*.*~
+!*.cljs
+!*.cljc
+!*.clj
