@@ -26,4 +26,6 @@ launch.ps1
 out/
 resources/**/js/
 /gh-pages
+/script
+
 
