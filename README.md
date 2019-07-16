@@ -1,4 +1,4 @@
-[![Clojars Project](https://img.shields.io/clojars/v/cark/cark.keechma.behavior-tree.svg)](https://clojars.org/cark/cark.keechma.behavior-tree) [![cljdoc badge](https://cljdoc.org/badge/cark/cark.keechma.behavior-tree)](https://cljdoc.org/d/cark/cark.keeshma.behavior-tree/CURRENT)
+[![Clojars Project](https://img.shields.io/clojars/v/cark/cark.keechma.behavior-tree.svg)](https://clojars.org/cark/cark.keechma.behavior-tree) [![cljdoc badge](https://cljdoc.org/badge/cark/cark.keechma.behavior-tree)](https://cljdoc.org/d/cark/cark.keechma.behavior-tree/CURRENT)
 # cark.keechma.behavior-tree
 A keechma controller that handles behavior trees.
 
