@@ -1,1 +1,1 @@
-shadow-cljs release test
+shadow-cljs release example
