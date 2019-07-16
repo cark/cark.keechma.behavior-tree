@@ -1,0 +1,1 @@
+* TODO Get mihael advice on bt event handler signature
