@@ -1,5 +1,5 @@
 (ns cark.keechma.behavior-tree.controller
-  "USe the namespace provided here to create your own keechma nehavior tree controllers"
+  "Use the namespace provided here to create your own keechma nehavior tree controllers"
   (:require [cark.behavior-tree.core :as bt]
             [cark.behavior-tree.context :as ctx]
             [cark.behavior-tree.db :as db]
@@ -47,7 +47,7 @@
 
 (defn handle-bt-events
   "This internal function loops over the events coming out of the behavior tree,
-precessing these according to the controller's confirguration."
+processing these according to the controller's configuration."
   [^Controller this app-db-atom]
   (let [events (bt/get-events (get-in @app-db-atom (app-db-path this)))]
     (doseq [[event-name arg] events]
@@ -115,8 +115,8 @@ passing its context as parameter."
 (defn <cmd-send-event
   "This function send a command to the controller. 
 This will result in sending a behavior tree event to the controller's behavior tree.
-The function is inteneded to be used from a component, passing its context as the first parameter.
-The seconde parameter is the event name, a keyword.
+The function is intended to be used from a component, passing its context as the first parameter.
+The second parameter is the event name, a keyword.
 The third optional parameter is the event argument."
   ([ctx event-name]
    (<cmd ctx ::send-event [event-name nil]))
@@ -139,7 +139,7 @@ and a route-params map as second parameter. It should return true if the control
 the params map as second argument, and the app-db as third argument. This function must return a possibly updated app-db.
   - :on-stop : this is the optional regular :on-stop keeshma controller function. It receives the controller as first parameter,
 the params map as second argument, and the app-db as third argument. This function must return a possibly updated app-db.
-  - :tree : this is the actual behavior tree context, as returned by the bt/hiccup->context on an hiccup notation behavior tree.
+  - :tree : this is the actual behavior tree context, as returned by bt/hiccup->context on an hiccup notation behavior tree.
   - :tree-init-func : this function receives the current behavior tree context and returns an initialized tree. This function is
 called when the controller is started
   - :tree-events : this map has keyword event names as keys and event handler functions as values. An event handler receives
