@@ -1,5 +1,5 @@
 (ns cark.keechma.behavior-tree.controller
-  "Use the namespace provided here to create your own keechma nehavior tree controllers"
+  "Use the namespace provided here to create your own keechma behavior tree controllers"
   (:require [cark.behavior-tree.core :as bt]
             [cark.behavior-tree.context :as ctx]
             [cark.behavior-tree.db :as db]
