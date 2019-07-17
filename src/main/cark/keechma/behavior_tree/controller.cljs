@@ -6,7 +6,8 @@
             [cark.behavior-tree.tree :as tree]
             [keechma.controller :as controller]
             [cljs.core.async :as s :refer [<!]]
-            [keechma.toolbox.ui :refer [<cmd]]))
+            [keechma.toolbox.ui :refer [<cmd]]
+            [reagent.ratom :refer [reaction]]))
 
 (defn- log [value]
   (js/console.log value)
@@ -166,3 +167,14 @@ the controller instance as its first parameter, the app-db-atom as its second pa
   "Sets the balckboard value for this controller."
   [app-db-atom controller-name value]
   (update-blackboard app-db-atom controller-name (constantly value)))
+
+(def ^{:arglists '[[controller-name]]}
+  blackboard-reaction
+  "Returns a function that takes an app-db-datom and returns a reagent reaction on the controller's blackboard."
+  (memoize
+   (fn [controller-name]
+     (memoize
+      (fn [app-db-atom]
+        (reaction (get-blackboard @app-db-atom controller-name)))))))
+
+
