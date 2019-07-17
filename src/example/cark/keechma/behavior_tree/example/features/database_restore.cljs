@@ -29,52 +29,38 @@
 (def ctx
   (-> [:sequence
        ;;init
-       [:update {:func (bt/bb-updater assoc
-                                      :restore-button true
-                                      :confirm-dialog false
-                                      :restoring-dialog false
-                                      :success-dialog false
-                                      :error-dialog false)}]
+       [:update {:func (bt/bb-updater assoc :flags #{:restore-button})}]
        ;;keep running
        [:parallel {:policy {:success :every :failure :every} :rerun-children true}
         ;; the start point, checking the restore button
-        [:guard [:predicate {:func (bt/bb-getter-in [:restore-button])}]
+        [:guard [:predicate {:func (bt/bb-getter-in [:flags :restore-button])}]
          [:on-event {:event :restore-pressed :wait? true}
-          [:update {:func (bt/bb-updater assoc
-                                         :restore-button false
-                                         :confirm-dialog true
-                                         :success-dialog false
-                                         :error-dialog false)}]]]
+          [:update {:func (bt/bb-updater assoc :flags #{:confirm-dialog})}]]]
         ;; confirm dialog
-        [:guard [:predicate {:func (bt/bb-getter-in [:confirm-dialog])}]
+        [:guard [:predicate {:func (bt/bb-getter-in [:flags :confirm-dialog])}]
          [:on-event {:event :cancel-pressed :wait? true}
-          [:update {:func (bt/bb-updater assoc
-                                         :restore-button true
-                                         :confirm-dialog false)}]]]
+          [:update {:func (bt/bb-updater assoc :flags #{:restore-button})}]]]
         ;; got file data
         [:on-event {:event :got-file-data :bind-arg :file-data
                     :wait? true}
          [:sequence
-          [:update {:func (bt/bb-updater assoc
-                                         :confirm-dialog false
-                                         :restoring-dialog true)}]
+          [:update {:func (bt/bb-updater assoc :flags #{:restoring-dialog})}]
           [:send-event {:event :restore-file :arg (bt/var-getter :file-data)}]]]
         ;; got restore operation result
         [:on-event {:event :restore-result :bind-arg :result :wait? true}
-         [:update {:func #(bt/bb-update % assoc
-                                        :restoring-dialog false
-                                        :restore-button true
-                                        :success-dialog (= :success (bt/get-var % :result))
-                                        :error-dialog (= :error (bt/get-var % :result)))}]]
+         [:update {:func #(cond-> (bt/bb-update % assoc :flags #{:restore-button})
+                            (= :success (bt/get-var % :result)) (bt/bb-update update :flags conj :success-dialog) 
+                            (= :error (bt/get-var % :result)) (bt/bb-update update :flags conj :error-dialog))}]]
         ;; success dialog
-        [:guard [:predicate {:func (bt/bb-getter-in [:success-dialog])}]
+        [:guard [:predicate {:func (bt/bb-getter-in [:flags :success-dialog])}]
          [:on-event {:event :ok-pressed :wait? true}
-          [:update {:func (bt/bb-updater assoc :success-dialog false)}]]]
+          [:update {:func (bt/bb-updater update :flags disj :success-dialog)}]]]
         ;; error dialog
-        [:guard [:predicate {:func (bt/bb-getter-in [:error-dialog])}]
+        [:guard [:predicate {:func (bt/bb-getter-in [:flags :error-dialog])}]
          [:on-event {:event :ok-pressed :wait? true}
-          [:update {:func (bt/bb-updater assoc :error-dialog false)}]]]]]
+          [:update {:func (bt/bb-updater update :flags disj :error-dialog)}]]]]]
       bt/hiccup->context bt/tick))
+
 
 ;; controller
 
@@ -87,16 +73,17 @@
 
 (defn controller []
   (btc/make (fn [controller route-params]
-              (when (= "database-restore" (get-in route-params [:data :page]))
-                true)) 
+              (= "database-restore" (get-in route-params [:data :page]))) 
             {:tree ctx
              :tree-init-func (constantly ctx)
              :tree-events {:restore-file restore-file}}))
 
 (defn subscriptions []
-  {::blackboard (memoize
-                 (fn [app-db-atom]
-                   (reaction (btc/get-blackboard @app-db-atom :database-restore))))})
+  (let [blackboard (btc/blackboard-reaction :database-restore)
+        flags (fn [app-db-atom]
+                (let [bb (blackboard app-db-atom)]
+                  (reaction (:flags @bb))))]
+    {::flags flags}))
 
 (defn install [app-def]
   (-> app-def

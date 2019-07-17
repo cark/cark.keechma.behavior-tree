@@ -55,19 +55,19 @@
           :padding-bottom ".2em"})
 
 (defn backup-buttons [ctx]
-  (let [bb (sub> ctx ::drf/blackboard)]
+  (let [flags (sub> ctx ::drf/flags)]
     [-content-group
      [-content-area
       [:p "We're only showing off the restore behavior tree, so the backup button is disabled !"]
       [-button {:disabled true}
        "Backup to a file..."]
       [-button {:on-click #(btc/<cmd-send-event ctx :restore-pressed)
-                :disabled (not (:restore-button bb))}
+                :disabled (not (:restore-button flags))}
        "Restore a saved file..."]]]))
 
 (defn confirm-dialog [ctx]
-  (let [bb (sub> ctx ::drf/blackboard)]
-    (when (:confirm-dialog bb) 
+  (let [flags (sub> ctx ::drf/flags)]
+    (when (:confirm-dialog flags) 
       [-content-area
        [panel/render
         {:class :warning}
@@ -83,8 +83,8 @@
            "Cancel"]]]]]))  )
 
 (defn restoring-dialog [ctx]
-  (let [bb (sub> ctx ::drf/blackboard)]
-    (when (:restoring-dialog bb)      
+  (let [flags (sub> ctx ::drf/flags)]
+    (when (:restoring-dialog flags)      
       [-content-area
        [panel/render
         {:class :info}
@@ -96,8 +96,8 @@
           "Your database is currently being restored. Please wait."]]]])) )
 
 (defn success-dialog [ctx type]
-  (let [bb (sub> ctx ::drf/blackboard)]
-    (when (:success-dialog bb)      
+  (let [flags (sub> ctx ::drf/flags)]
+    (when (:success-dialog flags)      
       [-content-area
        [panel/render
         {:class :success}
@@ -109,8 +109,8 @@
           "Ok"]]]])))
 
 (defn error-dialog [ctx type]
-  (let [bb (sub> ctx ::drf/blackboard)]
-    (when (:error-dialog bb)      
+  (let [flags (sub> ctx ::drf/flags)]
+    (when (:error-dialog flags)      
       [-content-area
        [panel/render
         {:class :danger}
@@ -134,7 +134,7 @@
 (def component 
   (ui/constructor
    {:renderer render
-    :subscription-deps [::drf/blackboard]
+    :subscription-deps [::drf/flags]
     :component-deps []
     :topic :database-restore})) 
 
