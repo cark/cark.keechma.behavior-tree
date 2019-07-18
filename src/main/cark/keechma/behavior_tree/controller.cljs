@@ -79,7 +79,7 @@ processing these according to the controller's configuration."
                          (handle-bt-events this app-db-atom))
               ::tick (do (swap! app-db-atom with-bt bt/tick)
                          (handle-bt-events this app-db-atom))
-              ::send-event (do (swap! app-db-atom with-bt
+              ::send-event (do (swap! app-db-atom with-bt 
                                       #(-> (apply bt/send-event % arg)
                                            bt/tick))
                                (handle-bt-events this app-db-atom))
