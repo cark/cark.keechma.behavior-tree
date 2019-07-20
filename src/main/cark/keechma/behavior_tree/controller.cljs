@@ -80,8 +80,7 @@ processing these according to the controller's configuration."
               ::tick (do (swap! app-db-atom with-bt bt/tick)
                          (handle-bt-events this app-db-atom))
               ::send-event (do (swap! app-db-atom with-bt 
-                                      #(-> (apply bt/send-event % arg)
-                                           bt/tick))
+                                      #(apply bt/send-event % arg))
                                (handle-bt-events this app-db-atom))
               nil)
             (catch js/Object ex
