@@ -2,7 +2,9 @@
   (:require [keechma.controller :as controller]
             [cark.keechma.behavior-tree.controller :as btc]
             [cark.behavior-tree.core :as bt]
-            [reagent.ratom :refer [reaction]]))
+            [cark.behavior-tree.state-machine :as sm]
+            [reagent.ratom :refer [reaction]]
+            [clojure.set :as set]))
 
 (defn log [value]
   (js/console.log value)
@@ -27,47 +29,39 @@
 ;; - failure : open a failure dialog having an ok button, activate restore button
 
 (def ctx
-  (-> [:sequence
-       ;;init
-       [:update {:func (bt/bb-updater assoc :flags #{:restore-button})}]
-       ;;keep running
-       [:parallel {:policy {:success :every :failure :every} :rerun-children true}
-        ;; the start point, checking the restore button
-        [:guard [:predicate {:func (bt/bb-getter-in [:flags :restore-button])}]
-         [:on-event {:event :restore-pressed :wait? true}
-          [:update {:func (bt/bb-updater assoc :flags #{:confirm-dialog})}]]]
-        ;; confirm dialog
-        [:guard [:predicate {:func (bt/bb-getter-in [:flags :confirm-dialog])}]
-         [:on-event {:event :cancel-pressed :wait? true}
-          [:update {:func (bt/bb-updater assoc :flags #{:restore-button})}]]]
-        ;; got file data
-        [:on-event {:event :got-file-data :bind-arg :file-data
-                    :wait? true}
-         [:sequence
-          [:update {:func (bt/bb-updater assoc :flags #{:restoring-dialog})}]
-          [:send-event {:event :restore-file :arg (bt/var-getter :file-data)}]]]
-        ;; got restore operation result
-        [:on-event {:event :restore-result :bind-arg :result :wait? true}
-         [:update {:func #(cond-> (bt/bb-update % assoc :flags #{:restore-button})
-                            (= :success (bt/get-var % :result)) (bt/bb-update update :flags conj :success-dialog) 
-                            (= :error (bt/get-var % :result)) (bt/bb-update update :flags conj :error-dialog))}]]
-        ;; success dialog
-        [:guard [:predicate {:func (bt/bb-getter-in [:flags :success-dialog])}]
-         [:on-event {:event :ok-pressed :wait? true}
-          [:update {:func (bt/bb-updater update :flags disj :success-dialog)}]]]
-        ;; error dialog
-        [:guard [:predicate {:func (bt/bb-getter-in [:flags :error-dialog])}]
-         [:on-event {:event :ok-pressed :wait? true}
-          [:update {:func (bt/bb-updater update :flags disj :error-dialog)}]]]]]
+  (-> (sm/make [:sm] :start 
+        (sm/state :start
+          (sm/enter-event [:update {:func (bt/bb-updater-in [:flags] set/union #{:restore-button})}])
+          (sm/event :restore-pressed (sm/transition :restore))
+          (sm/event :ok-pressed
+            [:update {:func (bt/bb-updater-in [:flags] set/difference #{:success-dialog
+                                                                        :error-dialog})}]))
+        (sm/state :restore
+          (sm/enter-event [:update {:func (bt/bb-assocer-in [:flags] #{:confirm-dialog})}])
+          (sm/event :cancel-pressed
+            [:sequence
+             [:update {:func (bt/bb-assocer-in [:flags] #{})}]
+             (sm/transition :start)])
+          (sm/event :got-file-data
+            [:sequence
+             [:send-event {:event :restore-file :arg sm/event-arg}]
+             [:update {:func (bt/bb-assocer-in [:flags] #{:restoring-dialog})}]])
+          (sm/event :restore-result
+            [:sequence
+             [:update {:func
+                       #(cond-> (bt/bb-update % assoc :flags #{:restore-button})
+                          (= :success (first (sm/event-arg %))) (bt/bb-update-in [:flags] conj :success-dialog)
+                          (= :error (first (sm/event-arg %))) (-> (bt/bb-update-in [:flags] conj :error-dialog)
+                                                                  (bt/bb-update assoc :error (second (sm/event-arg %)))))}]
+             (sm/transition :start)])))
       bt/hiccup->context bt/tick))
-
 
 ;; controller
 
 (def restore-result (atom (cycle [:success :error])))
 
 (defn restore-file [controller app-db-atom arg]
-  (js/setTimeout #(do (btc/execute-send-event controller :restore-result (first @restore-result))
+  (js/setTimeout #(do (btc/execute-send-event controller :restore-result [(first @restore-result) nil])
                       (swap! restore-result rest))
                  1500))
 
